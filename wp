@@ -47,7 +47,7 @@ read dbname
 printf "\nWordpress User to make: "
 read username
 printf "\nWordpress User's Password: "
-read password
+read -s password
 echo "CREATE DATABASE $dbname;" > /tmp/scheme.sql
 echo "GRANT ALL PRIVLEGES ON $dbname.* TO '$username'@'localhost' IDENTIFIED BY '$password';" >> /tmp/scheme.sql
 echo "FLUSH PRIVILEGES;" >> /tmp/scheme.sql
