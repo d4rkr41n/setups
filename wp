@@ -24,7 +24,8 @@ printf "\n\nClean /web directory without asking? (Yy | default=Nn): "
 read clweb
 cleanweb=${clweb^^}
 if [[ cleanweb == 'Y' ]]
-    rm -rf /var/www/html/*
+then
+rm -rf /var/www/html/*
 else
     rm -rfi /var/www/html/*
 fi
