@@ -23,11 +23,11 @@ sudo systemctl start apache2
 printf "\n\nClean web directory without asking? (Yy | default=Nn): "
 read clweb
 cleanweb=${clweb^^}
-if [[ cleanweb == 'Y' ]]
+if [[ $cleanweb == 'Y' ]]
 then
   rm -rf /var/www/html/*
 else
-    rm -rfi /var/www/html/*
+  rm -rfi /var/www/html/*
 fi
 
 # Get da code
@@ -48,6 +48,7 @@ printf "\nWordpress User to make: "
 read username
 printf "\nWordpress User's Password: "
 read -s password
+echo
 echo "CREATE DATABASE $dbname;" > /tmp/scheme.sql
 echo "GRANT ALL PRIVLEGES ON $dbname.* TO '$username'@'localhost' IDENTIFIED BY '$password';" >> /tmp/scheme.sql
 echo "FLUSH PRIVILEGES;" >> /tmp/scheme.sql
