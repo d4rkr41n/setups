@@ -20,9 +20,18 @@ fi
 sudo apt install apache2 apache2-utils php -y
 sudo systemctl enable apache2
 sudo systemctl start apache2
-rm -i /var/www/html/*
+printf "\n\nClean /web directory without asking? (Yy | default=Nn): "
+read clweb
+cleanweb=${clweb^^}
+if [[ cleanweb == 'Y' ]]
+    rm -rf /var/www/html/*
+else
+    rm -rfi /var/www/html/*
+fi
 
 # Get da code
+rm /tmp/latest.tar.gz
+rm -rf /tmp/wordpress
 wget -O /tmp/latest.tar.gz http://wordpress.org/latest.tar.gz
 tar -xzvf /tmp/latest.tar.gz -C /tmp/
 mv /tmp/wordpress/* /var/www/html/
@@ -49,9 +58,9 @@ rm /tmp/scheme.sql
 
 # Do the wordpress config
 sudo mv /var/www/html/wp-config-sample.php /var/www/html/wp-config.php
-sed 's/database_name_here/$dbname/g' wp-config.php
-sed 's/username_here/$username/g' wp-config.php
-sed 's/password_here/$password/g' wp-config.php
+sed -i 's/database_name_here/$dbname/g' /var/www/html/wp-config.php
+sed -i 's/username_here/$username/g' /var/www/html/wp-config.php
+sed -i 's/password_here/$password/g' /var/www/html/wp-config.php
 
 sudo systemctl restart apache2.service 
 sudo systemctl restart mysql.service
