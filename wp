@@ -7,7 +7,7 @@ fi
 
 printf "Upgrade packages too? (Yy|Nn): "
 read upg
-upgrade = ${upg^^}
+upgrade=${upg^^}
 
 sudo apt update -y
 
@@ -23,8 +23,8 @@ sudo systemctl start apache2
 rm -i /var/www/html/*
 
 # Get da code
-wget -O /tmp/latest.tar.gz -c http://wordpress.org/latest.tar.gz
-tar -xzvf /tmp/latest.tar.gz
+wget -O /tmp/latest.tar.gz http://wordpress.org/latest.tar.gz
+tar -xzvf /tmp/latest.tar.gz -C /tmp/
 mv /tmp/wordpress/* /var/www/html/
 sudo chown -R www-data:www-data /var/www/html/
 sudo chmod -R 755 /var/www/html/
