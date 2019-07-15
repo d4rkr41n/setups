@@ -1,0 +1,59 @@
+#!/bin/bash
+
+if [[ $EUID -ne 0 ]]; then
+  echo "I need more power (try again with sudo)"
+  exit 1
+fi
+
+printf "Upgrade packages too? (Yy|Nn): "
+read upg
+upgrade = ${upg^^}
+
+sudo apt update -y
+
+if [[ $upgrade == 'Y' ]]
+then
+  sudo apt upgrade -y
+fi
+
+# Apache setup
+sudo apt install apache2 apache2-utils php -y
+sudo systemctl enable apache2
+sudo systemctl start apache2
+rm -i /var/www/html/*
+
+# Get da code
+wget -O /tmp/latest.tar.gz -c http://wordpress.org/latest.tar.gz
+tar -xzvf /tmp/latest.tar.gz
+mv /tmp/wordpress/* /var/www/html/
+sudo chown -R www-data:www-data /var/www/html/
+sudo chmod -R 755 /var/www/html/
+
+# Basic Database setup
+sudo apt install mysql-client mysql-server -y
+sudo mysql_secure_installation
+printf "\nName of WP database to make: "
+read dbname
+printf "\nWordpress User to make: "
+read username
+printf "\nWordpress User's Password: "
+read password
+echo "CREATE DATABASE $dbname;" > /tmp/scheme.sql
+echo "GRANT ALL PRIVLEGES ON $dbname.* TO '$username'@'localhost' IDENTIFIED BY '$password';" >> /tmp/scheme.sql
+echo "FLUSH PRIVILEGES;" >> /tmp/scheme.sql
+echo "EXIT;" >> /tmp/scheme.sql
+echo "Attempting to log in as root and apply settings..."
+mysql --user=root --password -s < /tmp/scheme.sql
+echo "Deleting that config file for security"
+rm /tmp/scheme.sql
+
+# Do the wordpress config
+sudo mv /var/www/html/wp-config-sample.php /var/www/html/wp-config.php
+sed 's/database_name_here/$dbname/g' wp-config.php
+sed 's/username_here/$username/g' wp-config.php
+sed 's/password_here/$password/g' wp-config.php
+
+sudo systemctl restart apache2.service 
+sudo systemctl restart mysql.service
+
+printf "\n\nDone. :)\n"
