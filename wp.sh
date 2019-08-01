@@ -5,13 +5,12 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
-printf "Upgrade packages too? (Yy|Nn): "
-read upg
+read -p "Upgrade packages too? (Yy|Nn): " upg
 upgrade=${upg^^}
 
 sudo apt update -y
 
-if [[ $upgrade == 'Y' ]]
+if [[ $upgrade == "Y" ]]
 then
   sudo apt upgrade -y
 fi
@@ -20,34 +19,29 @@ fi
 sudo apt install apache2 apache2-utils php -y
 sudo systemctl enable apache2
 sudo systemctl start apache2
-printf "\n\nClean web directory without asking? (Yy | default=Nn): "
-read clweb
-cleanweb=${clweb^^}
-if [[ $cleanweb == 'Y' ]]
-then
-  rm -rf /var/www/html/*
-else
-  rm -rfi /var/www/html/*
+
+# Set up web directory
+read -p "What web directory to use [/var/www/html/]: " webdir
+webdir=${name:-/var/www/html/}
+sudo rm -rf "$webdir"
+if [ ! -d "$DIRECTORY" ]; then
+  mkdir "$webdir"
 fi
 
-# Get da code
+# Get the latest wordpress code
 rm /tmp/latest.tar.gz
 rm -rf /tmp/wordpress
 wget -O /tmp/latest.tar.gz http://wordpress.org/latest.tar.gz
 tar -xzvf /tmp/latest.tar.gz -C /tmp/
-mv /tmp/wordpress/* /var/www/html/
-sudo chown -R www-data:www-data /var/www/html/
-sudo chmod -R 755 /var/www/html/
+mv /tmp/wordpress/* "$webdir"
+sudo chown -R www-data:www-data "$webdir"
+sudo chmod -R 755 "$webdir"
 
-# Basic Database setup
+# Database setup
 sudo apt install mysql-client mysql-server -y
-sudo mysql_secure_installation
-printf "\nName of WP database to make: "
-read dbname
-printf "\nWordpress User to make: "
-read username
-printf "\nWordpress User's Password: "
-read -s password
+read -p "\nName of WP database to make: " dbname
+read -p "\nWordpress User to make: " username
+read -s -p "\nWordpress User's Password: " password
 echo
 echo "CREATE DATABASE $dbname;" > /tmp/scheme.sql
 echo "GRANT ALL PRIVLEGES ON $dbname.* TO '$username'@'localhost' IDENTIFIED BY '$password';" >> /tmp/scheme.sql
@@ -58,11 +52,11 @@ mysql --user=root --password -s < /tmp/scheme.sql
 echo "Deleting that config file for security"
 rm /tmp/scheme.sql
 
-# Do the wordpress config
-sudo mv /var/www/html/wp-config-sample.php /var/www/html/wp-config.php
-sed -i "s/database_name_here/$dbname/g" /var/www/html/wp-config.php
-sed -i "s/username_here/$username/g" /var/www/html/wp-config.php
-sed -i "s/password_here/$password/g" /var/www/html/wp-config.php
+# Set the wordpress config
+sudo mv $webdir"wp-config-sample.php" $webdir"wp-config.php"
+sed -i "s/database_name_here/$dbname/g" $webdir"wp-config.php"
+sed -i "s/username_here/$username/g" $webdir"wp-config.php"
+sed -i "s/password_here/$password/g" $webdir"wp-config.php"
 
 sudo systemctl restart apache2.service 
 sudo systemctl restart mysql.service
